@@ -27,7 +27,25 @@
       align-items: center;
       font-size: 24px;
       font-weight: bold;
+      transition: background-color 0.2s ease; /* Add a smooth transition */
     }
+
+    .tile:hover {
+      background-color: #ddd; /* Highlight tiles on hover */
+    }
+
+    .tile-2 { background-color: #eee; }
+    .tile-4 { background-color: #e0e0e0; }
+    .tile-8 { background-color: #c0c0c0; }
+    .tile-16 { background-color: #a0a0a0; }
+    .tile-32 { background-color: #808080; }
+    .tile-64 { background-color: #606060; }
+    .tile-128 { background-color: #404040; }
+    .tile-256 { background-color: #202020; }
+    .tile-512 { background-color: #202020; color: #fff; }
+    .tile-1024 { background-color: #101010; color: #fff; }
+    .tile-2048 { background-color: #000000; color: #fff; }
+
   </style>
 </head>
 <body>
@@ -73,11 +91,18 @@
         tile.textContent = '';
       } else {
         tile.textContent = value;
+        tile.classList.forEach(className => {
+          if (className.startsWith('tile-')) {
+            tile.classList.remove(className);
+          }
+        });
+        tile.classList.add(`tile-${value}`); // Add tile class for styling
       }
     }
 
     // Function to handle moving tiles (example: moving up)
     function moveUp() {
+      let moved = false; // Flag to indicate if any tiles moved
       for (let col = 0; col < boardSize; col++) {
         for (let row = 1; row < boardSize; row++) {
           let currentRow = row;
@@ -88,18 +113,118 @@
               board[(currentRow - 1) * boardSize + col] = currentValue;
               board[currentRow * boardSize + col] = 0;
               currentRow--;
+              moved = true; // A tile has moved
             }
             // Merge with the tile above if they have the same value
             if (currentRow > 0 && board[(currentRow - 1) * boardSize + col] === currentValue) {
               board[(currentRow - 1) * boardSize + col] *= 2;
               score += board[(currentRow - 1) * boardSize + col];
               board[currentRow * boardSize + col] = 0;
-              updateScore();
+              currentRow--;
+              moved = true; // A tile has moved
             }
           }
         }
       }
-      generateNewTile();
+      if (moved) {
+        generateNewTile(); // Generate a new tile only if tiles moved
+      }
+      updateBoardDisplay();
+    }
+
+    // Function to handle moving tiles down
+    function moveDown() {
+      let moved = false;
+      for (let col = 0; col < boardSize; col++) {
+        for (let row = boardSize - 2; row >= 0; row--) {
+          let currentRow = row;
+          let currentValue = board[row * boardSize + col];
+          if (currentValue !== 0) {
+            // Move down until you hit a non-zero tile or the bottom row
+            while (currentRow < boardSize - 1 && board[(currentRow + 1) * boardSize + col] === 0) {
+              board[(currentRow + 1) * boardSize + col] = currentValue;
+              board[currentRow * boardSize + col] = 0;
+              currentRow++;
+              moved = true;
+            }
+            // Merge with the tile below if they have the same value
+            if (currentRow < boardSize - 1 && board[(currentRow + 1) * boardSize + col] === currentValue) {
+              board[(currentRow + 1) * boardSize + col] *= 2;
+              score += board[(currentRow + 1) * boardSize + col];
+              board[currentRow * boardSize + col] = 0;
+              currentRow++;
+              moved = true;
+            }
+          }
+        }
+      }
+      if (moved) {
+        generateNewTile();
+      }
+      updateBoardDisplay();
+    }
+
+    // Function to handle moving tiles to the left
+    function moveLeft() {
+      let moved = false;
+      for (let row = 0; row < boardSize; row++) {
+        for (let col = 1; col < boardSize; col++) {
+          let currentCol = col;
+          let currentValue = board[row * boardSize + col];
+          if (currentValue !== 0) {
+            // Move left until you hit a non-zero tile or the left edge
+            while (currentCol > 0 && board[row * boardSize + (currentCol - 1)] === 0) {
+              board[row * boardSize + (currentCol - 1)] = currentValue;
+              board[row * boardSize + currentCol] = 0;
+              currentCol--;
+              moved = true;
+            }
+            // Merge with the tile to the left if they have the same value
+            if (currentCol > 0 && board[row * boardSize + (currentCol - 1)] === currentValue) {
+              board[row * boardSize + (currentCol - 1)] *= 2;
+              score += board[row * boardSize + (currentCol - 1)];
+              board[row * boardSize + currentCol] = 0;
+              currentCol--;
+              moved = true;
+            }
+          }
+        }
+      }
+      if (moved) {
+        generateNewTile();
+      }
+      updateBoardDisplay();
+    }
+
+    // Function to handle moving tiles to the right
+    function moveRight() {
+      let moved = false;
+      for (let row = 0; row < boardSize; row++) {
+        for (let col = boardSize - 2; col >= 0; col--) {
+          let currentCol = col;
+          let currentValue = board[row * boardSize + col];
+          if (currentValue !== 0) {
+            // Move right until you hit a non-zero tile or the right edge
+            while (currentCol < boardSize - 1 && board[row * boardSize + (currentCol + 1)] === 0) {
+              board[row * boardSize + (currentCol + 1)] = currentValue;
+              board[row * boardSize + currentCol] = 0;
+              currentCol++;
+              moved = true;
+            }
+            // Merge with the tile to the right if they have the same value
+            if (currentCol < boardSize - 1 && board[row * boardSize + (currentCol + 1)] === currentValue) {
+              board[row * boardSize + (currentCol + 1)] *= 2;
+              score += board[row * boardSize + (currentCol + 1)];
+              board[row * boardSize + currentCol] = 0;
+              currentCol++;
+              moved = true;
+            }
+          }
+        }
+      }
+      if (moved) {
+        generateNewTile();
+      }
       updateBoardDisplay();
     }
 
@@ -126,15 +251,14 @@
         case 'ArrowUp':
           moveUp();
           break;
-        // Add cases for other directions (down, left, right)
         case 'ArrowDown':
-          // Implement moveDown()
+          moveDown();
           break;
         case 'ArrowLeft':
-          // Implement moveLeft()
+          moveLeft();
           break;
         case 'ArrowRight':
-          // Implement moveRight()
+          moveRight();
           break;
       }
     });
