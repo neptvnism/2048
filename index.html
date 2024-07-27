@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>2048</title>
+  <style>
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      grid-template-rows: repeat(4, 100px);
+      gap: 10px;
+      border: 2px solid black;
+    }
+
+    .tile {
+      width: 90px;
+      height: 90px;
+      background-color: #ccc;
+      border-radius: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="game-board"></div>
+    <div id="score">Score: 0</div>
+  </div>
+  <script>
+    const boardSize = 4;
+    const board = []; // Initialize the board array
+    let score = 0;
+
+    // Create the game board elements
+    const gameBoard = document.getElementById('game-board');
+    for (let i = 0; i < boardSize * boardSize; i++) {
+      const tile = document.createElement('div');
+      tile.classList.add('tile');
+      tile.id = `tile-${i}`;
+      gameBoard.appendChild(tile);
+      board.push(0); // Initialize board with 0 values
+    }
+
+    // (Add game logic, input handling, and styling here)
+  </script>
+</body>
+</html>
