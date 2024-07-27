@@ -53,11 +53,17 @@
   <div id="game-container">
     <div id="game-board"></div>
     <div id="score">Score: 0</div>
-  </div>
+    <div id="high-score">High Score: 0</div> </div>
   <script>
     const boardSize = 4;
     let board = []; // Initialize the board array
     let score = 0;
+    let highScore = 0; // Initialize the high score
+
+    // Load high score from local storage
+    if (localStorage.getItem('highScore')) {
+      highScore = parseInt(localStorage.getItem('highScore'));
+    }
 
     // Create the game board elements
     const gameBoard = document.getElementById('game-board');
@@ -131,6 +137,7 @@
         generateNewTile(); // Generate a new tile only if tiles moved
       }
       updateBoardDisplay();
+      updateScore();
     }
 
     // Function to handle moving tiles down
@@ -163,6 +170,7 @@
         generateNewTile();
       }
       updateBoardDisplay();
+      updateScore();
     }
 
     // Function to handle moving tiles to the left
@@ -195,6 +203,7 @@
         generateNewTile();
       }
       updateBoardDisplay();
+      updateScore();
     }
 
     // Function to handle moving tiles to the right
@@ -227,6 +236,7 @@
         generateNewTile();
       }
       updateBoardDisplay();
+      updateScore();
     }
 
     // Function to update the display of all tiles
@@ -239,12 +249,19 @@
     // Function to update the score display
     function updateScore() {
       document.getElementById('score').textContent = 'Score: ' + score;
+      // Update high score if necessary
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('highScore', highScore); // Save to local storage
+        document.getElementById('high-score').textContent = 'High Score: ' + highScore;
+      }
     }
 
     // Initialize the game
     generateNewTile();
     generateNewTile();
     updateBoardDisplay();
+    updateScore(); // Update score initially
 
     // Add event listeners for keyboard input
     document.addEventListener('keydown', (event) => {
