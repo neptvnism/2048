@@ -47,18 +47,53 @@
     .tile-1024 { background-color: #d9e0e0; } /* Light pastel coral */
     .tile-2048 { background-color: #e0d9e0; } /* Light pastel rose */
 
+    #game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      padding: 20px;
+      border-radius: 5px;
+      display: none;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    #replay-button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
   <div id="game-container">
     <div id="game-board"></div>
     <div id="score">Score: 0</div>
-    <div id="high-score">High Score: 0</div> </div>
+    <div id="high-score">High Score: 0</div> 
+    <div id="game-over">
+      <h2>Game Over!</h2>
+      <p>Your final score: <span id="final-score"></span></p>
+      <button id="replay-button">Replay?</button>
+    </div>
+  </div>
   <script>
     const boardSize = 4;
-    let board = []; // Initialize the board array
+    let board = [];
     let score = 0;
-    let highScore = 0; // Initialize the high score
+    let highScore = 0;
+    let gameOver = false;
 
     // Load high score from local storage
     if (localStorage.getItem('highScore')) {
@@ -72,7 +107,7 @@
       tile.classList.add('tile');
       tile.id = `tile-${i}`;
       gameBoard.appendChild(tile);
-      board.push(0); // Initialize board with 0 values
+      board.push(0);
     }
 
     // Function to generate a new tile (2 or 4)
@@ -85,7 +120,7 @@
       }
       if (emptyCells.length > 0) {
         let randomIndex = Math.floor(Math.random() * emptyCells.length);
-        let newTileValue = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
+        let newTileValue = Math.random() < 0.9 ? 2 : 4;
         board[emptyCells[randomIndex]] = newTileValue;
         updateTileDisplay(emptyCells[randomIndex], newTileValue);
       }
@@ -103,41 +138,40 @@
             tile.classList.remove(className);
           }
         });
-        tile.classList.add(`tile-${value}`); // Add tile class for styling
+        tile.classList.add(`tile-${value}`);
       }
     }
 
     // Function to handle moving tiles (example: moving up)
     function moveUp() {
-      let moved = false; // Flag to indicate if any tiles moved
+      let moved = false;
       for (let col = 0; col < boardSize; col++) {
         for (let row = 1; row < boardSize; row++) {
           let currentRow = row;
           let currentValue = board[row * boardSize + col];
           if (currentValue !== 0) {
-            // Move up until you hit a non-zero tile or the top row
             while (currentRow > 0 && board[(currentRow - 1) * boardSize + col] === 0) {
               board[(currentRow - 1) * boardSize + col] = currentValue;
               board[currentRow * boardSize + col] = 0;
               currentRow--;
-              moved = true; // A tile has moved
+              moved = true;
             }
-            // Merge with the tile above if they have the same value
             if (currentRow > 0 && board[(currentRow - 1) * boardSize + col] === currentValue) {
               board[(currentRow - 1) * boardSize + col] *= 2;
               score += board[(currentRow - 1) * boardSize + col];
               board[currentRow * boardSize + col] = 0;
               currentRow--;
-              moved = true; // A tile has moved
+              moved = true;
             }
           }
         }
       }
       if (moved) {
-        generateNewTile(); // Generate a new tile only if tiles moved
+        generateNewTile();
       }
       updateBoardDisplay();
       updateScore();
+      checkGameOver(); // Check for game over after each move
     }
 
     // Function to handle moving tiles down
@@ -148,14 +182,12 @@
           let currentRow = row;
           let currentValue = board[row * boardSize + col];
           if (currentValue !== 0) {
-            // Move down until you hit a non-zero tile or the bottom row
             while (currentRow < boardSize - 1 && board[(currentRow + 1) * boardSize + col] === 0) {
               board[(currentRow + 1) * boardSize + col] = currentValue;
               board[currentRow * boardSize + col] = 0;
               currentRow++;
               moved = true;
             }
-            // Merge with the tile below if they have the same value
             if (currentRow < boardSize - 1 && board[(currentRow + 1) * boardSize + col] === currentValue) {
               board[(currentRow + 1) * boardSize + col] *= 2;
               score += board[(currentRow + 1) * boardSize + col];
@@ -171,6 +203,7 @@
       }
       updateBoardDisplay();
       updateScore();
+      checkGameOver();
     }
 
     // Function to handle moving tiles to the left
@@ -181,14 +214,12 @@
           let currentCol = col;
           let currentValue = board[row * boardSize + col];
           if (currentValue !== 0) {
-            // Move left until you hit a non-zero tile or the left edge
             while (currentCol > 0 && board[row * boardSize + (currentCol - 1)] === 0) {
               board[row * boardSize + (currentCol - 1)] = currentValue;
               board[row * boardSize + currentCol] = 0;
               currentCol--;
               moved = true;
             }
-            // Merge with the tile to the left if they have the same value
             if (currentCol > 0 && board[row * boardSize + (currentCol - 1)] === currentValue) {
               board[row * boardSize + (currentCol - 1)] *= 2;
               score += board[row * boardSize + (currentCol - 1)];
@@ -204,6 +235,7 @@
       }
       updateBoardDisplay();
       updateScore();
+      checkGameOver();
     }
 
     // Function to handle moving tiles to the right
@@ -214,14 +246,12 @@
           let currentCol = col;
           let currentValue = board[row * boardSize + col];
           if (currentValue !== 0) {
-            // Move right until you hit a non-zero tile or the right edge
             while (currentCol < boardSize - 1 && board[row * boardSize + (currentCol + 1)] === 0) {
               board[row * boardSize + (currentCol + 1)] = currentValue;
               board[row * boardSize + currentCol] = 0;
               currentCol++;
               moved = true;
             }
-            // Merge with the tile to the right if they have the same value
             if (currentCol < boardSize - 1 && board[row * boardSize + (currentCol + 1)] === currentValue) {
               board[row * boardSize + (currentCol + 1)] *= 2;
               score += board[row * boardSize + (currentCol + 1)];
@@ -237,6 +267,7 @@
       }
       updateBoardDisplay();
       updateScore();
+      checkGameOver();
     }
 
     // Function to update the display of all tiles
@@ -257,27 +288,92 @@
       }
     }
 
+    // Function to check for game over
+    function checkGameOver() {
+      let hasMoves = false;
+      // Check for empty cells
+      for (let i = 0; i < boardSize * boardSize; i++) {
+        if (board[i] === 0) {
+          hasMoves = true;
+          break;
+        }
+      }
+      // Check for adjacent tiles with the same value
+      for (let row = 0; row < boardSize; row++) {
+        for (let col = 0; col < boardSize; col++) {
+          let currentValue = board[row * boardSize + col];
+          // Check left
+          if (col > 0 && board[row * boardSize + (col - 1)] === currentValue) {
+            hasMoves = true;
+            break;
+          }
+          // Check right
+          if (col < boardSize - 1 && board[row * boardSize + (col + 1)] === currentValue) {
+            hasMoves = true;
+            break;
+          }
+          // Check up
+          if (row > 0 && board[(row - 1) * boardSize + col] === currentValue) {
+            hasMoves = true;
+            break;
+          }
+          // Check down
+          if (row < boardSize - 1 && board[(row + 1) * boardSize + col] === currentValue) {
+            hasMoves = true;
+            break;
+          }
+        }
+        if (hasMoves) {
+          break;
+        }
+      }
+      if (!hasMoves) {
+        gameOver = true;
+        document.getElementById('game-over').style.display = 'block';
+        document.getElementById('final-score').textContent = score;
+        // Add event listener for replay button
+        document.getElementById('replay-button').addEventListener('click', resetGame);
+      }
+    }
+
+    // Function to reset the game
+    function resetGame() {
+      gameOver = false;
+      score = 0;
+      board = [];
+      for (let i = 0; i < boardSize * boardSize; i++) {
+        board.push(0);
+      }
+      updateBoardDisplay();
+      updateScore();
+      generateNewTile();
+      generateNewTile();
+      document.getElementById('game-over').style.display = 'none';
+    }
+
     // Initialize the game
     generateNewTile();
     generateNewTile();
     updateBoardDisplay();
-    updateScore(); // Update score initially
+    updateScore();
 
     // Add event listeners for keyboard input
     document.addEventListener('keydown', (event) => {
-      switch (event.key) {
-        case 'ArrowUp':
-          moveUp();
-          break;
-        case 'ArrowDown':
-          moveDown();
-          break;
-        case 'ArrowLeft':
-          moveLeft();
-          break;
-        case 'ArrowRight':
-          moveRight();
-          break;
+      if (!gameOver) { // Only allow moves if the game is not over
+        switch (event.key) {
+          case 'ArrowUp':
+            moveUp();
+            break;
+          case 'ArrowDown':
+            moveDown();
+            break;
+          case 'ArrowLeft':
+            moveLeft();
+            break;
+          case 'ArrowRight':
+            moveRight();
+            break;
+        }
       }
     });
   </script>
